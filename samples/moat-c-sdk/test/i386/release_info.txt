@@ -1,0 +1,21 @@
+CONFIGRATIONS
+=============
+SSE_VERSION: 1.1.0
+SSE_SDK_VERSION: 1.1.0
+TARGET_ARCH: i386-linux-gnu
+
+REPOSITORY INFO
+===============
+parent: 2019:575c01204ced tip
+ update version strings.
+branch: release/release_1.1.0
+commit: 2 unknown (clean)
+update: (current)
+
+DIGEST
+======
+apprunner: cb36e383c38ca3c7ee70fb5a452a3c48
+apprunner_cli: c0ad8befc1b5f8c754bbef15c0f6d719
+lib/libssep.so: 843c8fc595652a22c960c5a8e3ff4d2a
+lib/libmoat.so: 33ee54cc9b328c87e22e11a5fe517316
+lib/libmoatapp.so: e578710616d6589fb95cefc18aa78c1b
