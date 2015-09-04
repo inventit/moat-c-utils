@@ -1,0 +1,69 @@
+#!/usr/bin/env python
+import glob
+import os
+import shlex
+import sys
+import gyp
+
+script_dir = os.path.dirname(__file__)
+moat_root  = os.path.normpath(os.path.join(script_dir, os.pardir))
+
+
+def determine_target_arch(args):
+  arch = None
+  for arg in args:
+    if arg.find('-Dtarget_arch=') == 0:
+      arch = arg.replace('-Dtarget_arch=', '')
+  return arch
+
+def run_gyp(args):
+  rc = gyp.main(args)
+  if rc != 0:
+    print 'Error running GYP'
+    sys.exit(rc)
+
+if __name__ == '__main__':
+  args = sys.argv[1:]
+
+  target_arch = determine_target_arch(args)
+  if not target_arch:
+    print 'Error no target_arch'
+    sys.exit(1)
+  # Directory within which we want all generated files (including Makefiles)
+  # to be written.
+  output_dir = os.path.join(os.path.abspath(moat_root), 'out')
+  output_dir = os.path.join(output_dir, target_arch)
+
+  # GYP bug.
+  # On msvs it will crash if it gets an absolute path.
+  # On Mac/make it will crash if it doesn't get an absolute path.
+  if sys.platform == 'win32':
+    args.append(os.path.join(moat_root, 'moatapp.gyp'))
+    common_fn  = os.path.join(moat_root, 'common.gypi')
+    options_fn = os.path.join(moat_root, 'config.gypi')
+  else:
+    args.append(os.path.join(os.path.abspath(moat_root), 'moatapp.gyp'))
+    common_fn  = os.path.join(os.path.abspath(moat_root), 'common.gypi')
+    options_fn = os.path.join(os.path.abspath(moat_root), 'config.gypi')
+
+  if os.path.exists(common_fn):
+    args.extend(['-I', common_fn])
+
+  if os.path.exists(options_fn):
+    args.extend(['-I', options_fn])
+
+  args.append('--depth=' + moat_root)
+
+  # There's a bug with windows which doesn't allow this feature.
+  if sys.platform != 'win32':
+
+    # Tell gyp to write the Makefiles into output_dir
+    args.extend(['--generator-output', output_dir])
+
+    # Tell make to write its output into the same dir
+    args.extend(['-Goutput_dir=' + output_dir])
+
+  args.append('-Dcomponent=static_library')
+  args.append('-Dlibrary=static_library')
+  gyp_args = list(args)
+  run_gyp(gyp_args)

@@ -1,0 +1,12 @@
+moatc-utils-sample_*_*.zip
+certs/*
+package/token.bin
+test/x86_64/.app-id
+test/x86_64/.moat_ds
+test/x86_64/moatc-utils-sample.so
+test/x86_64/package.json
+config.gypi
+config.mk
+out/
+!.gitkeep
+
