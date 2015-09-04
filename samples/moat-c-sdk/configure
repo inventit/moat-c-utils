@@ -1,0 +1,278 @@
+#!/usr/bin/env python
+import optparse
+import os
+import pprint
+import subprocess
+import sys
+import tools.moatutils as moatutils
+
+CC = os.environ.get('CC', 'cc')
+
+moat_root = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(moat_root, 'tools'))
+
+# parse our options
+parser = optparse.OptionParser()
+
+parser.add_option("--debug",
+    action="store_true",
+    dest="debug",
+    help="Also build debug build")
+
+parser.add_option("--dest-cpu",
+    action="store",
+    dest="dest_cpu",
+    help="CPU architecture to build for. Valid values are: arm, ia32, x64")
+
+#parser.add_option("--dest-os",
+#    action="store",
+#    dest="dest_os",
+#    help="Operating system to build for. Valid values are: "
+#         "linux")
+
+parser.add_option("--name",
+    action="store",
+    dest="package_name",
+    help="Package name of your M2M/IoT application")
+
+parser.add_option("--version",
+    action="store",
+    dest="package_version",
+    help="Package version")
+
+parser.add_option("--token",
+    action="store",
+    dest="token_path",
+    help="Path to the security token file. Default path is \'./package/token.bin\'")
+
+(options, args) = parser.parse_args()
+
+def cc_macros():
+  """Checks predefined macros using the CC command."""
+
+  try:
+    p = subprocess.Popen(CC.split() + ['-dM', '-E', '-'],
+                         stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+  except OSError:
+    print '''moatapp configure error: No acceptable C compiler found!
+
+        Please make sure you have a C compiler installed on your system and/or
+        consider adjusting the CC environment variable if you installed
+        it in a non-standard prefix.
+        '''
+    sys.exit()
+
+  p.stdin.write('\n')
+  out = p.communicate()[0]
+
+  out = str(out).split('\n')
+
+  k = {}
+  for line in out:
+    import shlex
+    lst = shlex.split(line)
+    if len(lst) > 2:
+      key = lst[1]
+      val = lst[2]
+      k[key] = val
+  return k
+
+
+def host_arch_cc():
+  """Host architecture check using the CC command."""
+
+  k = cc_macros()
+
+  matchup = {
+    '__x86_64__'  : 'x64',
+    '__i386__'    : 'ia32',
+    '__arm__'     : 'arm',
+  }
+
+  rtn = 'ia32' # default
+
+  for i in matchup:
+    if i in k and k[i] != '0':
+      rtn = matchup[i]
+      break
+
+  return rtn
+
+def to_make_arch(org_arch):
+  if org_arch == 'x64':
+    arch = 'x86_64'
+  elif org_arch == 'ia32':
+    arch = 'i386'
+  elif org_arch == 'arm':
+    arch = 'arm'
+  return arch
+
+def compiler_version():
+  try:
+    proc = subprocess.Popen(CC.split() + ['--version'], stdout=subprocess.PIPE)
+  except WindowsError:
+    return (0, False)
+
+  is_clang = 'clang' in proc.communicate()[0].split('\n')[0]
+
+  proc = subprocess.Popen(CC.split() + ['-dumpversion'], stdout=subprocess.PIPE)
+  version = tuple(map(int, proc.communicate()[0].split('.')))
+
+  return (version, is_clang)
+
+def error_exit(msg, help=False):
+  if msg:
+    print 'MOAT Configure error: ' + msg
+  if help:
+    parser.print_help()
+  sys.exit()
+
+def generate_dev_certs(cert_path, package_name):
+  keystore = moatutils.keystore(cert_path, package_name)
+  if keystore.has():
+    return
+
+  try:
+    p = subprocess.check_call(['keytool', '-help'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  except OSError, e:
+    msg = '''
+    keytool command cound not found.
+    Please install JDK.
+    '''
+    error_exit(msg)
+  except subprocess.CalledProcessError:
+    pass
+
+  try:
+    p = subprocess.check_call(['openssl', 'version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  except OSError, e:
+    msg = '''
+    openssl command cound not found.
+    Please install OpenSSL.
+    '''
+    error_exit(msg)
+  except subprocess.CalledProcessError:
+    pass
+
+  if not keystore.generate():
+    error_exit('failed to generate a keystore.')
+  if not keystore.export_pkcs12():
+    error_exit('failed to generate a certificate.')
+  if not keystore.export_key():
+    error_exit('failed to export a key.')
+  if not keystore.export_pem():
+    error_exit('failed to export a certificate.')
+
+def generate_package_json(moat_path, package_name, version):
+  package = moatutils.package(moat_path.MOAT_ROOT, package_name, version)
+  meta_path = os.path.join(moat_path.RESOURCES_PATH, 'package.json')
+  if not os.path.isfile(meta_path):
+    package.gen_metafile(moat_path.RESOURCES_PATH)
+  s = open(meta_path).read()
+  print s
+
+def generate_skeleton(moat_path, package_name):
+  tmpl_path = os.path.join(moat_path.SOURCE_PATH, 'moatapp.tmpl')
+  app_src = os.path.join(moat_path.SOURCE_PATH, package_name + '.c')
+  if os.path.isfile(app_src):
+    return
+  if os.path.isfile(tmpl_path):
+    os.rename(tmpl_path, app_src)
+  else:
+    print('MOAT Configure WARNING : **** %s is missing. ****' %(app_src))
+
+def configure_moat(o):
+  moat_path = moatutils.pathinfo(moat_root)
+
+  token_path = options.token_path
+  if not token_path:
+    token_path = os.path.join(moat_path.RESOURCES_PATH, 'token.bin')
+  o['variables']['token_path'] = token_path
+
+  package_name = options.package_name
+  if not package_name:
+    token = moatutils.token(token_path)
+    if token.verify_and_extract(os.path.join(moat_path.CERTS_PATH, 'moat.pem')):
+      package_name = str(token.get_content('packageId'))
+      app_id = str(token.get_content('applicationId'))
+
+  if not package_name:
+    msg = '''
+    PACKAGE NAME could not be determined.
+    Please generate a your package's security token using iidn command, then copy it as './package/token.bin'.
+    Or Please specify \'--name\' option.'''
+    error_exit(msg, True)
+  print 'MOAT package name: ' + package_name
+  o['variables']['package_name'] = package_name
+  o['variables']['application_id'] = app_id
+
+  version = options.package_version
+  if not version:
+    version = '1.0.0'
+  generate_dev_certs(moat_path.CERTS_PATH, package_name)
+  generate_package_json(moat_path, package_name, version)
+  generate_skeleton(moat_path, package_name)
+
+def configure_app(o):
+
+  configure_moat(o)
+
+  o['default_configuration'] = 'Debug' if options.debug else 'Release'
+
+  host_arch = to_make_arch(host_arch_cc())
+  if options.dest_cpu:
+    target_arch = to_make_arch(options.dest_cpu)
+  else:
+    target_arch = host_arch
+  o['variables']['host_arch'] = host_arch
+  o['variables']['target_arch'] = target_arch
+
+  cc_version, is_clang = compiler_version()
+  o['variables']['clang'] = 1 if is_clang else 0
+
+  if not is_clang and cc_version != 0:
+    o['variables']['gcc_version'] = 10 * cc_version[0] + cc_version[1]
+
+  moat_lib_dir = os.path.join(moat_root, 'test', target_arch, 'lib')
+  o['library_dirs'] = [ moat_lib_dir ]
+  o[ 'ldflags' ] = [ '-L' + moat_lib_dir ]
+
+output = {
+  'variables': {},
+  'include_dirs': [],
+  'library_dirs': [],
+  'libraries': [],
+  'defines': [],
+  'cflags': [],
+}
+
+configure_app(output)
+
+# variables should be a root level element,
+# move everything else to target_defaults
+variables = output['variables']
+del output['variables']
+output = {
+  'variables': variables,
+  'target_defaults': output
+}
+pprint.pprint(output, indent=2)
+
+def write(filename, data):
+  filename = os.path.join(moat_root, filename)
+  print "creating ", filename
+  f = open(filename, 'w+')
+  f.write(data)
+
+write('config.gypi', "# Do not edit. Generated by the configure script.\n" +
+  pprint.pformat(output, indent=2) + "\n")
+
+write('config.mk', "# Do not edit. Generated by the configure script.\n" +
+  ("BUILDTYPE=%s\n" % ('Debug' if options.debug else 'Release')) +
+  ("ARCH=%s\n" % (output['variables']['target_arch'])))
+
+gyp_args = ['-f', 'make', '-Dtarget_arch=' + output['variables']['target_arch']]
+
+subprocess.call([sys.executable, 'tools/gyp_moatapp'] + gyp_args)

@@ -1,0 +1,64 @@
+CONFIGRATIONS
+=============
+SSE_VERSION: 1.0.8
+SSE_SDK_VERSION: 1.0.5
+BUILD_ARCH: x86_64
+TARGET_BOARD: Armadillo-IoT
+
+REPOSITORY INFO
+===============
+parent: 1913:2b16f42e9c3e tip
+ Fill in the change history from previous version.
+branch: release/release_1.0.8
+commit: 41 unknown (clean)
+update: (current)
+
+DIGEST
+======
+MD5(README.md)= e4951436d747053c3a3e1b720daaa2a3
+MD5(common.gypi)= d0b768726963b73bb05a4857e844d719
+MD5(Makefile)= ab2d1f2104bb435c4181fe20de3c5a73
+MD5(configure)= 8d7285263773108144de17811c1856b6
+MD5(moatapp.gyp)= cbb20bb8812c307df31c8e525ee7f96c
+MD5(certs/moat.pem)= b9e64979566eec18f7caad65e124fb3d
+MD5(src/moatapp.tmpl)= 53d6a9c92be87253b5445f74e2438f21
+MD5(include/servicesync/sseconfig.h)= fe17904e4d03c736d98963a811ae009d
+MD5(include/servicesync/moat.h)= 3f5e5d74e71ca7ab18e56d1dfb45c4fb
+MD5(include/servicesync/sse/ssequeue.h)= 6d09f8805d6fe82b6435009fdadadcf4
+MD5(include/servicesync/sse/sseutils.h)= 3a4f9cc5f7353ec44ef2379325323237
+MD5(include/servicesync/sse/ssebase64.h)= b2e3a6839dcc1c82c7183f297e950a7b
+MD5(include/servicesync/sse/sseversion.h)= 7e6646654f9e6819bb6b8f80bc6795ba
+MD5(include/servicesync/sse/ssestring.h)= ba47c6c789480393875e4c9f57b38fa2
+MD5(include/servicesync/sse/ssehashlib.h)= b6628a992bd9ac0a7bc04e73a5d68989
+MD5(include/servicesync/sse/sseslist.h)= e8c6425f8a58383a5afc0dcb82dec6d9
+MD5(include/servicesync/sse/sselist.h)= d0f25fd1c74cd4cd2228bd8894e584ef
+MD5(include/servicesync/sse/ssebase.h)= 7067e9a1f78c2305fe8f2067bc295791
+MD5(include/servicesync/moat/moaturl.h)= e9f6ddd87140e9412af3c3680a42f97e
+MD5(include/servicesync/moat/moatlog.h)= 4d2109d51eb547c30d513c2a7d147010
+MD5(include/servicesync/moat/moathttpc.h)= 95d264f99ef72190adfb706ce021d534
+MD5(include/servicesync/moat/moatapi.h)= 985f763e3dd0b6e51990dae8ccfc3213
+MD5(include/servicesync/moat/moatapp.h)= b34385655ea4a6edd2123101b76b9d79
+MD5(include/servicesync/moat/moattimer.h)= f6e4e96f23d925ee3b68c0c5f1876e08
+MD5(include/servicesync/moat/moatvalue.h)= 60f511e7a926198ac9842b19623871ba
+MD5(include/servicesync/moat/moatutils.h)= 0c261ce36e303e2f0dba7f4e6df619ef
+MD5(include/servicesync/moat/moatplugin.h)= b66b292207d7d63ca9e0d6f018091ac4
+MD5(include/servicesync/moat/moatuuid.h)= a100261fee481799ca77719e30668df5
+MD5(include/servicesync/moat/moatjson.h)= 6c8c6ed3f119d539ce824ba2b24af2ba
+MD5(include/servicesync/moat/moatevent.h)= b2ee6d81299f63647324d6bdc4570942
+MD5(package/.empty)= d41d8cd98f00b204e9800998ecf8427e
+MD5(test/test.c)= 9f4e45e0a34ce2d90b259c3618e213f0
+MD5(test/arm/apprunner_cli)= de0a7c2f1ae724b3b8d3b9270d5232a7
+MD5(test/arm/apprunner)= 2deb36c1eec259784fd3326ca2fbca20
+MD5(test/arm/lib/libmoatapp.so)= ab7f680ebf2ab740789f2b5f751fafe3
+MD5(test/arm/lib/libmoat.so)= ccfe7e3019e3135edca204d612bf65ea
+MD5(test/arm/lib/libssep.so)= b300f96d8fc23a4e97d7bd74c74be85f
+MD5(test/x86_64/apprunner_cli)= a43b0cb1aa381424f29a6b5218101e97
+MD5(test/x86_64/apprunner)= 97b6a772eb624406d2fe8c82fc020e0f
+MD5(test/x86_64/lib/libmoatapp.so)= df5bfb2e32bc5fdc458ffc1ce8710e09
+MD5(test/x86_64/lib/libmoat.so)= 95d355ae1bdad208846884a0a8befaaf
+MD5(test/x86_64/lib/libssep.so)= 86eb4f8c13844d948910811fa48eb6c2
+MD5(tools/moatutils.py)= f2b54aaa0c7274f00d73d705904d4768
+MD5(tools/gyp_moatapp)= 05b23dd862a7199785b4030ba1946bd3
+MD5(tools/package.py)= 636f92666c78b5bd76265931c352ecae
+MD5(tools/__init__.py)= d41d8cd98f00b204e9800998ecf8427e
+MD5(tools/test.py)= c941af06ac50b56f38f473ad11731b83

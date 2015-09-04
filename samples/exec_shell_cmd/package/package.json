@@ -1,0 +1,30 @@
+{
+  "name" : "moatc-utils-sample",
+  "version" : "1.0.0",
+  "description" : "[description]",
+  "maintainers" : [
+    {
+      "name" : "[name]",
+      "email" : "[email]"
+    }
+  ],
+  "bugs" : {
+    "mail" : "[email]"
+  },
+  "dependencies" : {
+    "moat" : ">=1.0.0 <2.0.0"
+  },
+  "main" : "moatc-utils-sample.so",
+  "models" : {
+    "ShellCommand" : {
+      "array" : false,
+      "scope" : "device",
+      "attributes" : {
+        "result" : {"type" : "bool"}
+      },
+      "commands" : {
+        "exec" : {"paramType" : "string"}
+      }
+    }
+  }
+}
