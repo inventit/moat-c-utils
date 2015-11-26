@@ -33,6 +33,10 @@ You can find the samples in `samples` directory.
 
 ## Change History
 
+### Changes in `1.0.1` (November 26, 2015)
+
+* Fixbug: TSseUtilShellCommand does not call an error callback when the executed command exited with non-zero exit code.
+
 ### Changes in `1.0.0` (September 4, 2015)
 
 * Initial release
