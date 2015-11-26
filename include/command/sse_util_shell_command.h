@@ -21,6 +21,8 @@
 
 SSE_BEGIN_C_DECLS
 
+#include <sys/types.h>
+
 #define SSE_UTIL_SHELL_COMMAND_DEFAULT_BUFFER_SIZE (2048)
 
 /**
@@ -56,6 +58,8 @@ struct TSseUtilShellCommand_ {
   MoatIOWatcher* fIoWatcher; /** I/O watcher for file descripter to read a result of shell command */
 
   TSseUtilStreamBuffer* fBuffer; /** Buffer to store a result of shell command */
+
+  pid_t fChildPid; /** PID of child process */
 };
 typedef struct TSseUtilShellCommand_ TSseUtilShellCommand;
 

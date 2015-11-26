@@ -38,6 +38,9 @@ TSseUtilShellCommand_OnProcessReadable(MoatIOWatcher *in_watcher, sse_pointer in
 {
   sse_int err;
   TSseUtilShellCommand* self;
+  pid_t pid;
+  sse_int status;
+  sse_int exit_code;
 
   if (in_user_data == NULL) {
     LOG_ERROR("Invalid argumet. in_user_data=[%p]", in_user_data);
@@ -52,9 +55,38 @@ TSseUtilShellCommand_OnProcessReadable(MoatIOWatcher *in_watcher, sse_pointer in
     moat_io_watcher_free(in_watcher);
     self->fIoWatcher = NULL;
     close(in_desc);
-    wait(NULL);
+
+    pid = waitpid(self->fChildPid, &status, 0);
+    if (pid == -1) {
+      sse_int err_no = err_no;
+      LOG_ERROR("waitpid() ... failed with [%s].", strerror(err_no));
+      self->fState = SSE_UTIL_SHELL_COMMAND_STATE_ERROR;
+      if (self->fOnErrorCallback) {
+        self->fOnErrorCallback(self, self->fOnErrorCallbackUserData, SSE_E_GENERIC, strerror(err_no));
+      }
+      return;
+    }
 
     if (err == SSE_E_NOENT) { /* Normal end */
+      if (WIFEXITED(status)) {
+        exit_code = WEXITSTATUS(status);
+        if (exit_code != 0) {
+          LOG_ERROR("[%s] ... failed, exit_code=[%d]", self->fShellCommand, exit_code);
+          self->fState = SSE_UTIL_SHELL_COMMAND_STATE_ERROR;
+          if (self->fOnErrorCallback) {
+            self->fOnErrorCallback(self, self->fOnErrorCallbackUserData, SSE_E_GENERIC, "exit_code is not zero");
+          }
+          return;
+        }
+      } else {
+        LOG_ERROR("[%s] ... ABEND.", self->fShellCommand);
+        self->fState = SSE_UTIL_SHELL_COMMAND_STATE_ERROR;
+        if (self->fOnErrorCallback) {
+          self->fOnErrorCallback(self, self->fOnErrorCallbackUserData, SSE_E_GENERIC, "WIFEXITED() failed");
+        }
+        return;
+      }
+
       if (TSseUtilsStramBuffer_HasData(self->fBuffer)) {
 	if (self->fOnReadCallback) {
 	  self->fOnReadCallback(self, self->fOnReadCallbackUserData);
@@ -131,6 +163,7 @@ TSseUtilShellCommand_Initialize(TSseUtilShellCommand* self)
   if (self->fBuffer == NULL) {
     return SSE_E_NOMEM;
   }
+  self->fChildPid = -1;
 
   return SSE_E_OK;
 }
@@ -185,6 +218,8 @@ TSseUtilShellCommand_Finalize(TSseUtilShellCommand* self)
   if (self->fBuffer) {
     TSseUtilStreamBuffer_Delete(self->fBuffer);
   }
+
+  self->fChildPid = -1;
 }
 
 sse_int
@@ -295,6 +330,9 @@ TSseUtilShellCommand_Execute(TSseUtilShellCommand* self)
     sse_free(*argv);
     _exit(EXIT_SUCCESS);
   }
+
+  self->fChildPid = cpid;
+
   /* Close writeable end of pipe */
   close(pipefd[1]);
 

@@ -77,9 +77,10 @@ moat_app_main(sse_int in_argc, sse_char *argv[])
   cmd2.AddListener(listener2);
   cmd2.SetCommand("pwd");
 
-  cmd2.AddListener(listener3);
-  cmd2.SetCommand("dummy");
-  cmd1.AddArgument("-h");
+  cmd3.AddListener(listener3);
+  //cmd3.SetCommand("dummy");
+  //cmd3.AddArgument("-h");
+  cmd3.SetCommand("/bin/false");
 
   list_child.AddListener(listener_list_child);
   list_child.AddCommand(cmd1);
